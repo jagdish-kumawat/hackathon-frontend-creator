@@ -38,7 +38,7 @@ export function AgentsTable() {
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [formLoading, setFormLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDomain, setSelectedDomain] = useState<string>("__all__");
+  const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
@@ -72,7 +72,7 @@ export function AgentsTable() {
       page: 1,
       pageSize: 10,
       name: searchTerm || undefined,
-      domain: domain === "__all__" ? undefined : domain,
+      domain: domain || undefined,
     });
   };
 
@@ -172,14 +172,12 @@ export function AgentsTable() {
                 <SelectValue placeholder="All domains" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All domains</SelectItem>
-                {domains
-                  .filter((domain) => domain.name && domain.name.trim() !== "")
-                  .map((domain) => (
-                    <SelectItem key={domain.id} value={domain.name}>
-                      {domain.name}
-                    </SelectItem>
-                  ))}
+                <SelectItem value="">All domains</SelectItem>
+                {domains.map((domain) => (
+                  <SelectItem key={domain.id} value={domain.name}>
+                    {domain.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

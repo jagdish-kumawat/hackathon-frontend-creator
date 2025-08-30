@@ -2,39 +2,31 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Clock, CheckCircle, TrendingUp } from "lucide-react";
-
-const stats = [
-  {
-    name: "Total Agents",
-    value: "8",
-    change: "+2 this week",
-    icon: Bot,
-    trend: "up",
-  },
-  {
-    name: "Avg Latency",
-    value: "245ms",
-    change: "-15ms from last week",
-    icon: Clock,
-    trend: "down",
-  },
-  {
-    name: "Success Rate",
-    value: "99.2%",
-    change: "+0.5% from last week",
-    icon: CheckCircle,
-    trend: "up",
-  },
-  {
-    name: "Adapters",
-    value: "24",
-    change: "+3 new adapters",
-    icon: TrendingUp,
-    trend: "up",
-  },
-];
+import { useAgents, useLlmProviders } from "@/hooks/use-agents";
 
 export function DashboardStats() {
+  const { agents, loading } = useAgents();
+  const { providers } = useLlmProviders();
+
+  const totalAgents = agents?.totalCount || 0;
+  const totalProviders = providers?.length || 0;
+
+  const stats = [
+    {
+      name: "Total Agents",
+      value: loading ? "..." : totalAgents.toString(),
+      change: `${totalAgents} active`,
+      icon: Bot,
+      trend: "up",
+    },
+    {
+      name: "LLM Providers",
+      value: loading ? "..." : totalProviders.toString(),
+      change: `${totalProviders} configured`,
+      icon: TrendingUp,
+      trend: "up",
+    },
+  ];
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat) => (

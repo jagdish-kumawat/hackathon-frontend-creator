@@ -135,7 +135,7 @@ export function DashboardNav() {
             <div className="flex items-center gap-2">
               <div className="hidden sm:block text-right">
                 <p className="text-sm font-medium text-foreground">
-                  {user?.name || user?.username || "User"}
+                  {user?.fullName || user?.username || "User"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {user?.username || "Authenticated"}

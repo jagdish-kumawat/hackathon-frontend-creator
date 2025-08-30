@@ -10,17 +10,9 @@ import { logger } from "@/lib/logger";
 
 export function UserApiDebug() {
   const isDevelopment = useIsDevelopment();
-  const { user, userProfile, isAuthenticated } = useAuth();
-  const {
-    loading,
-    error,
-    clearError,
-    getCurrentUser,
-    getTokenInfo,
-    registerUser,
-    ensureUserExists,
-    getUserStats,
-  } = useUserManagement();
+  const { user, isAuthenticated } = useAuth();
+  const { loading, error, clearError, getCurrentUser, getUserStats } =
+    useUserManagement();
 
   const [debugData, setDebugData] = useState<any>(null);
 
@@ -67,30 +59,6 @@ export function UserApiDebug() {
             variant="outline"
           >
             Get Current User
-          </Button>
-
-          <Button
-            onClick={() => runTest("Get Token Info", getTokenInfo)}
-            disabled={loading}
-            variant="outline"
-          >
-            Get Token Info
-          </Button>
-
-          <Button
-            onClick={() => runTest("Register User", registerUser)}
-            disabled={loading}
-            variant="outline"
-          >
-            Register User
-          </Button>
-
-          <Button
-            onClick={() => runTest("Ensure User Exists", ensureUserExists)}
-            disabled={loading}
-            variant="outline"
-          >
-            Ensure User Exists
           </Button>
 
           <Button
@@ -141,7 +109,7 @@ export function UserApiDebug() {
         </h3>
         <div className="space-y-4">
           <div>
-            <h4 className="font-medium text-gray-700">MSAL User Account:</h4>
+            <h4 className="font-medium text-gray-700">Current User:</h4>
             <pre className="text-sm bg-gray-50 p-3 rounded overflow-x-auto">
               {JSON.stringify(user, null, 2)}
             </pre>
@@ -149,10 +117,10 @@ export function UserApiDebug() {
 
           <div>
             <h4 className="font-medium text-gray-700">
-              User Profile from API:
+              Authentication Status:
             </h4>
             <pre className="text-sm bg-gray-50 p-3 rounded overflow-x-auto">
-              {JSON.stringify(userProfile, null, 2)}
+              {JSON.stringify({ isAuthenticated }, null, 2)}
             </pre>
           </div>
         </div>

@@ -17,18 +17,18 @@ export function UserProfile({
   className,
   showAdvancedInfo = false,
 }: UserProfileProps) {
-  const { userProfile, refreshUserProfile } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: userProfile?.firstName || "",
-    lastName: userProfile?.lastName || "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
   });
 
   const handleEdit = () => {
     setFormData({
-      firstName: userProfile?.firstName || "",
-      lastName: userProfile?.lastName || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
     });
     setIsEditing(true);
   };
@@ -36,8 +36,8 @@ export function UserProfile({
   const handleCancel = () => {
     setIsEditing(false);
     setFormData({
-      firstName: userProfile?.firstName || "",
-      lastName: userProfile?.lastName || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
     });
   };
 
@@ -66,7 +66,7 @@ export function UserProfile({
     }
   };
 
-  if (!userProfile) {
+  if (!user) {
     return (
       <Card className={`p-6 ${className}`}>
         <div className="text-center text-gray-500">Loading user profile...</div>
@@ -103,7 +103,7 @@ export function UserProfile({
               />
             ) : (
               <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                {userProfile.firstName}
+                {user.firstName}
               </div>
             )}
           </div>
@@ -124,7 +124,7 @@ export function UserProfile({
               />
             ) : (
               <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                {userProfile.lastName}
+                {user.lastName}
               </div>
             )}
           </div>
@@ -134,7 +134,7 @@ export function UserProfile({
               Email
             </label>
             <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-400">
-              {userProfile.email}
+              {user.email}
             </div>
           </div>
 
@@ -143,33 +143,16 @@ export function UserProfile({
               Full Name
             </label>
             <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-400">
-              {userProfile.fullName}
+              {user.fullName}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Status
-            </label>
-            <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-              <span
-                className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                  userProfile.isActive
-                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                }`}
-              >
-                {userProfile.isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Member Since
+              Username
             </label>
             <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-400">
-              {new Date(userProfile.createdAt).toLocaleDateString()}
+              {user.username}
             </div>
           </div>
 
@@ -181,16 +164,7 @@ export function UserProfile({
                   User ID
                 </label>
                 <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-400 font-mono text-xs">
-                  {userProfile.id}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Last Updated
-                </label>
-                <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-600 dark:text-gray-400">
-                  {new Date(userProfile.updatedAt).toLocaleString()}
+                  {user.id}
                 </div>
               </div>
             </>
