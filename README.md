@@ -6,6 +6,8 @@ A comprehensive Next.js application for designing, configuring, and simulating m
 
 ### ✨ Core Functionality
 
+- **Microsoft Entra ID Authentication**: Secure enterprise authentication with mock provider for development
+- **Landing Page**: Beautiful marketing page with authentication flow
 - **Agent Creation Wizard**: Step-by-step agent configuration with intuitive forms
 - **Visual Pipeline Editor**: React Flow-based canvas for designing voice agent workflows
 - **Mock Simulation Engine**: Local simulation of voice agent conversations without external APIs
@@ -15,6 +17,9 @@ A comprehensive Next.js application for designing, configuring, and simulating m
 
 ### 🎨 User Experience
 
+- **Authentication Flow**: Secure login/logout with user profile display
+- **Landing Page**: Professional marketing page highlighting key features
+- **Protected Routes**: Dashboard and tools accessible only after authentication
 - **Dual Themes**: Beautiful light and dark mode with instant switching
 - **Command Palette**: Quick access to actions with ⌘K/Ctrl+K
 - **Responsive Design**: Mobile-first design that works on all devices
@@ -52,16 +57,66 @@ A comprehensive Next.js application for designing, configuring, and simulating m
    npm install
    ```
 
-3. **Start the development server**
+3. **Configure Authentication (Optional)**
+
+   For production with real Microsoft Entra ID:
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+   Update `.env.local` with your Azure App Registration values:
+
+   ```
+   NEXT_PUBLIC_AZURE_CLIENT_ID=your-azure-client-id
+   NEXT_PUBLIC_AZURE_TENANT_ID=your-azure-tenant-id
+   ```
+
+   For development, the app includes a mock authentication provider that simulates Microsoft login.
+
+4. **Start the development server**
 
    ```bash
    npm run dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## 📖 Usage Guide
+## � Authentication
+
+The application supports Microsoft Entra ID authentication with two modes:
+
+### Development Mode (Default)
+
+- Uses mock authentication provider
+- Simulates Microsoft login flow
+- No external API calls required
+- User data persisted in localStorage
+
+### Production Mode
+
+- Real Microsoft Entra ID integration
+- Requires Azure App Registration
+- Configure environment variables
+- Enterprise-grade security
+
+### Setup Azure App Registration
+
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to Azure Active Directory > App registrations
+3. Create a new registration
+4. Configure redirect URI: `http://localhost:3000` (development)
+5. Note the Application (client) ID and Directory (tenant) ID
+6. Update `.env.local` with these values
+
+## �📖 Usage Guide
+
+### Getting Started
+
+1. **Landing Page**: Visit the application to see the marketing page
+2. **Sign In**: Click "Sign in with Microsoft" (uses mock auth in development)
+3. **Dashboard**: Access the main dashboard after authentication
 
 ### Creating Your First Agent
 

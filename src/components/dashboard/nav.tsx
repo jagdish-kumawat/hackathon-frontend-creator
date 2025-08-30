@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/components/providers/mock-auth-provider";
 import {
   Bot,
   Settings,
@@ -17,12 +18,13 @@ import {
   Palette,
   BookOpen,
   MoreHorizontal,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: Bot, current: true },
+  { name: "Dashboard", href: "/dashboard", icon: Bot, current: true },
   { name: "Agents", href: "/agents", icon: Bot, current: false },
   { name: "Gallery", href: "/gallery", icon: Palette, current: false },
   { name: "Plugins", href: "/plugins", icon: Zap, current: false },
@@ -34,6 +36,7 @@ const navigation = [
 export function DashboardNav() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -121,9 +124,29 @@ export function DashboardNav() {
             <Button variant="outline" size="icon">
               <Bell className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon">
-              <User className="h-4 w-4" />
-            </Button>
+
+            {/* User Profile with Logout */}
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-foreground">
+                  {user?.name || user?.username || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {user?.username || "Authenticated"}
+                </p>
+              </div>
+              <Button variant="outline" size="icon">
+                <User className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={logout}
+                title="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
