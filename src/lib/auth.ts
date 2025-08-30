@@ -23,6 +23,13 @@ export const loginRequest = {
   scopes: ["User.Read"],
 };
 
+// API scope configuration for accessing the backend API
+export const apiRequest = {
+  scopes: [
+    process.env.NEXT_PUBLIC_API_SCOPE || "api://your-api-client-id/User.Access",
+  ],
+};
+
 // Add the endpoints here for Microsoft Graph API services you'd like to use.
 export const graphConfig = {
   graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",

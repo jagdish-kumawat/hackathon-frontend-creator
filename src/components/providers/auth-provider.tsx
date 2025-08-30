@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import {
   PublicClientApplication,
   EventType,
@@ -9,13 +15,17 @@ import {
   AccountInfo,
 } from "@azure/msal-browser";
 import { msalInstance, loginRequest } from "@/lib/auth";
+import { userApi } from "@/lib/user-api";
+import { User } from "@/types/user";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: AccountInfo | null;
+  userProfile: User | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +33,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AccountInfo | null>(null);
+  const [userProfile, setUserProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshUserProfile = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUserProfile(null);
+      return;
+    }
+
+    try {
+      const profile = await userApi.ensureUserExists();
+      setUserProfile(profile);
+    } catch (error) {
+      console.error("Failed to load user profile:", error);
+      setUserProfile(null);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const initializeMsal = async () => {
@@ -62,6 +88,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Load user profile when authentication state changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      refreshUserProfile();
+    } else {
+      setUserProfile(null);
+    }
+  }, [isAuthenticated, user, refreshUserProfile]);
+
   const login = async () => {
     try {
       const response = await msalInstance.loginPopup(loginRequest);
@@ -80,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       await msalInstance.logoutPopup(logoutRequest);
       setUser(null);
+      setUserProfile(null);
       setIsAuthenticated(false);
       // Redirect to home page after logout
       window.location.href = "/";
@@ -87,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Logout failed:", error);
       // Fallback - still clear local state and redirect
       setUser(null);
+      setUserProfile(null);
       setIsAuthenticated(false);
       window.location.href = "/";
     }
@@ -95,9 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     isAuthenticated,
     user,
+    userProfile,
     login,
     logout,
     loading,
+    refreshUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

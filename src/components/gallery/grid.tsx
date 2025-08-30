@@ -273,7 +273,7 @@ export function GalleryGrid() {
               <div className="bg-muted p-3 rounded-lg">
                 <h5 className="text-xs font-medium mb-1">Sample Interaction</h5>
                 <p className="text-xs text-muted-foreground italic">
-                  "{template.preview}"
+                  &ldquo;{template.preview}&rdquo;
                 </p>
               </div>
             </div>

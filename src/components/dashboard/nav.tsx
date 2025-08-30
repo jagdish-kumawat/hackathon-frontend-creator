@@ -29,6 +29,12 @@ const navigation = [
   { name: "Gallery", href: "/gallery", icon: Palette, current: false },
   { name: "Plugins", href: "/plugins", icon: Zap, current: false },
   { name: "Playground", href: "/playground", icon: Command, current: false },
+  {
+    name: "User Management",
+    href: "/user-management",
+    icon: User,
+    current: false,
+  },
   { name: "Docs", href: "/docs", icon: BookOpen, current: false },
   { name: "Settings", href: "/settings", icon: Settings, current: false },
 ];
