@@ -22,7 +22,6 @@ import {
   ChevronDown,
   AlertCircle,
   Plus,
-  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -297,40 +296,6 @@ export function FileManagerInterface({ className }: FileManagerInterfaceProps) {
       console.error("Failed to download file:", error);
       setError("Failed to download file");
     }
-  };
-
-  // View file in browser (for PDFs, images, documents)
-  const handleViewFile = async (file: FileInfo) => {
-    try {
-      // Use browser-friendly download that returns SAS URL
-      const downloadResponse = await fileApiClient.downloadFile(file.id, {
-        expiryHours: 2, // 2 hours for viewing
-        permissions: "r", // read-only
-      });
-
-      // Open the SAS URL directly in a new tab for viewing
-      window.open(downloadResponse.sasUrl, "_blank");
-    } catch (error) {
-      console.error("Failed to view file:", error);
-      setError("Failed to view file");
-    }
-  };
-
-  // Helper function to check if file can be viewed in browser
-  const canViewInBrowser = (file: FileInfo): boolean => {
-    const viewableTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "text/plain",
-      "text/html",
-      "text/css",
-      "text/javascript",
-      "application/json",
-    ];
-    return viewableTypes.includes(file.contentType.toLowerCase());
   };
 
   // Delete files
@@ -736,16 +701,6 @@ export function FileManagerInterface({ className }: FileManagerInterfaceProps) {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        {canViewInBrowser(file) && (
-                          <Button
-                            onClick={() => handleViewFile(file)}
-                            size="sm"
-                            variant="ghost"
-                            title="View in browser"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        )}
                         <Button
                           onClick={() => handleDownloadFile(file)}
                           size="sm"
