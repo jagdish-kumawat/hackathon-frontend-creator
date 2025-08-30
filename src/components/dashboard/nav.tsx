@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/components/providers/auth-provider";
 import {
@@ -24,23 +25,23 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Bot, current: true },
-  { name: "Agents", href: "/agents", icon: Bot, current: false },
-  { name: "Gallery", href: "/gallery", icon: Palette, current: false },
-  { name: "Plugins", href: "/plugins", icon: Zap, current: false },
-  { name: "Playground", href: "/playground", icon: Command, current: false },
+  { name: "Dashboard", href: "/dashboard", icon: Bot },
+  { name: "Agents", href: "/agents", icon: Bot },
+  { name: "Gallery", href: "/gallery", icon: Palette },
+  { name: "Plugins", href: "/plugins", icon: Zap },
+  { name: "Playground", href: "/playground", icon: Command },
   {
     name: "User Management",
     href: "/user-management",
     icon: User,
-    current: false,
   },
-  { name: "Docs", href: "/docs", icon: BookOpen, current: false },
-  { name: "Settings", href: "/settings", icon: Settings, current: false },
+  { name: "Docs", href: "/docs", icon: BookOpen },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function DashboardNav() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
 
@@ -73,21 +74,26 @@ export function DashboardNav() {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  item.current
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4 mr-3" />
-                {item.name}
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (pathname === "/" && item.href === "/dashboard");
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <item.icon className="h-4 w-4 mr-3" />
+                  {item.name}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Theme toggle */}

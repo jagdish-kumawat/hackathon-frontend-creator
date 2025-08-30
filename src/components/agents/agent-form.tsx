@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,16 +50,7 @@ export function AgentForm({
   });
 
   const [customDomain, setCustomDomain] = useState("");
-  const [showCustomDomain, setShowCustomDomain] = useState(() => {
-    if (
-      initialData?.domain &&
-      !["Custom", "General QNA"].includes(initialData.domain)
-    ) {
-      setCustomDomain(initialData.domain);
-      return true;
-    }
-    return false;
-  });
+  const [showCustomDomain, setShowCustomDomain] = useState(false);
 
   const {
     providers,
@@ -73,6 +64,19 @@ export function AgentForm({
   } = useDomains();
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Handle initial data when domains are loaded
+  useEffect(() => {
+    if (initialData?.domain && domains.length > 0) {
+      const domainExists = domains.some((d) => d.name === initialData.domain);
+      if (!domainExists || initialData.domain === "Custom") {
+        setShowCustomDomain(true);
+        setCustomDomain(
+          initialData.domain === "Custom" ? "" : initialData.domain
+        );
+      }
+    }
+  }, [initialData?.domain, domains]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -138,7 +142,9 @@ export function AgentForm({
   };
 
   const handleDomainChange = (value: string) => {
-    if (value === "Custom") {
+    // Check if the selected domain is "Custom" (from backend)
+    const selectedDomain = domains.find((d) => d.name === value);
+    if (value === "Custom" || selectedDomain?.name === "Custom") {
       setShowCustomDomain(true);
       setFormData((prev) => ({ ...prev, domain: "" }));
     } else {
@@ -235,7 +241,6 @@ export function AgentForm({
                     {domain.name}
                   </SelectItem>
                 ))}
-                <SelectItem value="Custom">Custom</SelectItem>
               </SelectContent>
             </Select>
             {showCustomDomain && (
