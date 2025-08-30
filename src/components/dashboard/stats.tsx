@@ -36,29 +36,27 @@ const stats = [
 
 export function DashboardStats() {
   return (
-    <div className="lg:pl-64">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.name} className="relative overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p
-                className={`text-xs ${
-                  stat.trend === "up"
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-blue-600 dark:text-blue-400"
-                }`}
-              >
-                {stat.change}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {stats.map((stat) => (
+        <Card key={stat.name} className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
+            <stat.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stat.value}</div>
+            <p
+              className={`text-xs ${
+                stat.trend === "up"
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-blue-600 dark:text-blue-400"
+              }`}
+            >
+              {stat.change}
+            </p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
