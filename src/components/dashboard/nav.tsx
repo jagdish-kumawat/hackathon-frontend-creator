@@ -21,6 +21,7 @@ import {
   MoreHorizontal,
   LogOut,
   FolderOpen,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Bot },
   { name: "Agents", href: "/agents", icon: Bot },
+  { name: "Chat", href: "/chat", icon: MessageCircle },
   { name: "Gallery", href: "/gallery", icon: Palette },
   { name: "File Manager", href: "/file-manager", icon: FolderOpen },
   { name: "Plugins", href: "/plugins", icon: Zap },

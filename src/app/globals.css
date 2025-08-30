@@ -58,6 +58,72 @@
   }
 }
 
+/* Markdown content styles for chat messages */
+@layer components {
+  .markdown-content {
+    @apply text-sm leading-relaxed;
+  }
+
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3,
+  .markdown-content h4,
+  .markdown-content h5,
+  .markdown-content h6 {
+    @apply font-bold;
+  }
+
+  .markdown-content p {
+    @apply mb-2 last:mb-0;
+  }
+
+  .markdown-content strong {
+    @apply font-bold;
+  }
+
+  .markdown-content em {
+    @apply italic;
+  }
+
+  .markdown-content ul,
+  .markdown-content ol {
+    @apply mb-2;
+  }
+
+  .markdown-content li {
+    @apply mb-1;
+  }
+
+  .markdown-content blockquote {
+    @apply border-l-4 border-border pl-4 italic my-3;
+  }
+
+  .markdown-content code {
+    @apply font-mono;
+  }
+
+  .markdown-content pre {
+    @apply font-mono;
+  }
+
+  .markdown-content hr {
+    @apply my-4 border-border;
+  }
+
+  .markdown-content table {
+    @apply border-collapse;
+  }
+
+  .markdown-content th,
+  .markdown-content td {
+    @apply border border-border px-2 py-1;
+  }
+
+  .markdown-content th {
+    @apply bg-muted font-semibold;
+  }
+}
+
 @layer utilities {
   .glass {
     @apply bg-white/80 backdrop-blur-xl border border-white/20;

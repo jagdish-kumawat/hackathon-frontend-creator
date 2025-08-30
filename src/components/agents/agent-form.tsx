@@ -52,9 +52,11 @@ export function AgentForm({
     llmProviderId: initialData?.llmProviderId || "",
     endpoint: initialData?.endpoint || "",
     apiKey: initialData?.apiKey || "",
+    apiVersion: initialData?.apiVersion || "",
     deploymentModel: initialData?.deploymentModel || "",
     instructions: initialData?.instructions || "",
     withData: initialData?.withData || false,
+    embeddingModel: initialData?.embeddingModel || "",
   });
 
   const [customDomain, setCustomDomain] = useState("");
@@ -124,6 +126,29 @@ export function AgentForm({
     if (formData.deploymentModel.length > 100)
       newErrors.deploymentModel =
         "Deployment Model must be 100 characters or less";
+
+    // Check if Azure OpenAI is selected
+    const selectedProvider = providers.find(
+      (p) => p.id === formData.llmProviderId
+    );
+    const isAzureOpenAI = selectedProvider?.name === "Azure OpenAI";
+
+    // API Version validation (only for Azure OpenAI)
+    if (isAzureOpenAI && !formData.apiVersion?.trim()) {
+      newErrors.apiVersion = "API Version is required for Azure OpenAI";
+    }
+    if (formData.apiVersion && formData.apiVersion.length > 50) {
+      newErrors.apiVersion = "API Version must be 50 characters or less";
+    }
+
+    // Embedding Model validation (only when withData is true)
+    if (formData.withData && !formData.embeddingModel?.trim()) {
+      newErrors.embeddingModel = "Embedding Model is required when using data";
+    }
+    if (formData.embeddingModel && formData.embeddingModel.length > 100) {
+      newErrors.embeddingModel =
+        "Embedding Model must be 100 characters or less";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -405,6 +430,91 @@ export function AgentForm({
             )}
           </div>
 
+          {/* API Version field - only show for Azure OpenAI */}
+          {(() => {
+            const selectedProvider = providers.find(
+              (p) => p.id === formData.llmProviderId
+            );
+            const isAzureOpenAI = selectedProvider?.name === "Azure OpenAI";
+
+            if (!isAzureOpenAI) return null;
+
+            return (
+              <div className="space-y-2">
+                <Label htmlFor="apiVersion">API Version *</Label>
+                <Input
+                  id="apiVersion"
+                  value={formData.apiVersion || ""}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      apiVersion: e.target.value,
+                    }))
+                  }
+                  placeholder="2024-08-01-preview"
+                  maxLength={50}
+                  className={errors.apiVersion ? "border-destructive" : ""}
+                />
+                {errors.apiVersion && (
+                  <p className="text-sm text-destructive">
+                    {errors.apiVersion}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  API version for Azure OpenAI service (e.g.,
+                  2024-08-01-preview)
+                </p>
+              </div>
+            );
+          })()}
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="withData"
+                checked={formData.withData}
+                onCheckedChange={(checked: boolean) =>
+                  setFormData((prev) => ({ ...prev, withData: checked }))
+                }
+              />
+              <Label htmlFor="withData" className="text-sm font-medium">
+                Enable data integration (RAG)
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Allow this agent to use external data sources and documents
+            </p>
+          </div>
+
+          {/* Embedding Model field - only show when withData is true */}
+          {formData.withData && (
+            <div className="space-y-2">
+              <Label htmlFor="embeddingModel">Embedding Model *</Label>
+              <Input
+                id="embeddingModel"
+                value={formData.embeddingModel || ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    embeddingModel: e.target.value,
+                  }))
+                }
+                placeholder="text-embedding-ada-002, text-embedding-3-small, etc."
+                maxLength={100}
+                className={errors.embeddingModel ? "border-destructive" : ""}
+              />
+              {errors.embeddingModel && (
+                <p className="text-sm text-destructive">
+                  {errors.embeddingModel}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Model to use for document embeddings (required for data
+                integration)
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="instructions">Instructions *</Label>
@@ -455,17 +565,6 @@ export function AgentForm({
             {errors.instructions && (
               <p className="text-sm text-destructive">{errors.instructions}</p>
             )}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="withData"
-              checked={formData.withData}
-              onCheckedChange={(checked: boolean | "indeterminate") =>
-                setFormData((prev) => ({ ...prev, withData: !!checked }))
-              }
-            />
-            <Label htmlFor="withData">Uses additional data</Label>
           </div>
 
           <div className="flex gap-3 pt-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,29 @@ export function PlaygroundInterface() {
 
   return (
     <div className="space-y-6">
+      {/* Chat Feature Notice */}
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              <div>
+                <h3 className="font-medium">New Chat Feature Available!</h3>
+                <p className="text-sm text-muted-foreground">
+                  Try our new real-time chat interface with streaming responses
+                </p>
+              </div>
+            </div>
+            <Link href="/chat">
+              <Button variant="outline" size="sm">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Open Chat
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Agent Selection */}
       <Card>
         <CardHeader>
@@ -172,7 +196,7 @@ export function PlaygroundInterface() {
               <div className="bg-muted/50 p-6 rounded-lg text-center">
                 <p className="text-muted-foreground">
                   Voice testing interface ready. This playground will integrate
-                  with your backend voice processing pipeline once it's
+                  with your backend voice processing pipeline once it&apos;s
                   available.
                 </p>
               </div>
