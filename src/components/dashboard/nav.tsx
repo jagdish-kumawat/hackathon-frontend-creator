@@ -20,6 +20,7 @@ import {
   BookOpen,
   MoreHorizontal,
   LogOut,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Bot },
   { name: "Agents", href: "/agents", icon: Bot },
   { name: "Gallery", href: "/gallery", icon: Palette },
+  { name: "File Manager", href: "/file-manager", icon: FolderOpen },
   { name: "Plugins", href: "/plugins", icon: Zap },
   { name: "Playground", href: "/playground", icon: Command },
   {

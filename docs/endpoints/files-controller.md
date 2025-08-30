@@ -160,34 +160,29 @@ curl -X POST "https://localhost:7022/api/files/upload-multiple" \
 
 ---
 
-### 3. List Agent Files
+### 3. List Files
 
-**GET** `/api/files/{agentId}`
+**GET** `/api/files`
 
-Retrieve all files uploaded to a specific agent.
+List files with pagination and filtering options.
 
-#### Request
+#### Query Parameters
 
-**Headers:**
-
-```
-Authorization: Bearer {jwt-token}
-```
-
-**Query Parameters:**
-
-- `page` (optional): Page number (default: 1)
-- `pageSize` (optional): Items per page (default: 20, max: 100)
-- `category` (optional): Filter by file category
-- `fileExtension` (optional): Filter by file extension
-- `searchTerm` (optional): Search in file names
-- `includeDeleted` (optional): Include soft-deleted files (default: false)
+- `Page` (optional): Page number (default: 1)
+- `PageSize` (optional): Items per page (default: 20, max: 100)
+- `UserId` (optional): Filter by user ID
+- `AgentId` (optional): Filter by agent ID
+- `Category` (optional): Filter by category
+- `FileExtension` (optional): Filter by file extension
+- `SearchTerm` (optional): Search in file names
+- `IncludeDeleted` (optional): Include soft-deleted files (default: false)
 
 #### Example Request
 
 ```bash
-curl -X GET "https://localhost:7022/api/files/67b2d2c2c15092936921c719?page=1&pageSize=10" \
-  -H "Authorization: Bearer {your-jwt-token}"
+curl -X GET "https://localhost:7022/api/files?Page=1&PageSize=20" \
+  -H "Authorization: Bearer {your-jwt-token}" \
+  -k
 ```
 
 #### Response
@@ -196,37 +191,43 @@ curl -X GET "https://localhost:7022/api/files/67b2d2c2c15092936921c719?page=1&pa
 
 ```json
 {
-  "data": [
+  "items": [
     {
-      "id": "67b2d2c2c15092936921c71a",
-      "fileName": "test.txt",
-      "blobName": "67b2d2c2c15092936921c719/a1b2c3d4-e5f6-7890-abcd-ef1234567890.txt",
-      "contentType": "text/plain",
-      "sizeBytes": 12,
-      "agentId": "67b2d2c2c15092936921c719",
-      "uploadedAt": "2025-08-30T10:30:00Z"
+      "fileName": "test.pdf",
+      "blobName": "68b2df125326c8e7972330c5/af658a50-2bbe-43f0-827b-1d3e6d4e3387.pdf",
+      "containerName": "68b2d2c2c15092936921c718",
+      "contentType": "application/pdf",
+      "sizeBytes": 23,
+      "fileExtension": ".pdf",
+      "agentId": "68b2df125326c8e7972330c5",
+      "displayName": "test.pdf",
+      "fileSizeFormatted": "23 B",
+      "id": "68b2df245326c8e7972330ca",
+      "createdAt": "2025-08-30T11:23:16.307Z",
+      "updatedAt": "2025-08-30T11:23:16.307Z"
     }
   ],
   "page": 1,
-  "pageSize": 10,
-  "totalCount": 1,
+  "pageSize": 20,
+  "totalCount": 3,
   "totalPages": 1
 }
 ```
 
 ---
 
-### 4. Get File Details
+### 4. Get File Metadata
 
-**GET** `/api/files/file/{id}`
+**GET** `/api/files/{id}`
 
-Get detailed information about a specific file.
+Get detailed metadata for a specific file.
 
 #### Example Request
 
 ```bash
-curl -X GET "https://localhost:7022/api/files/file/67b2d2c2c15092936921c71a" \
-  -H "Authorization: Bearer {your-jwt-token}"
+curl -X GET "https://localhost:7022/api/files/68b2df1c5326c8e7972330c7" \
+  -H "Authorization: Bearer {your-jwt-token}" \
+  -k
 ```
 
 #### Response
@@ -253,16 +254,27 @@ curl -X GET "https://localhost:7022/api/files/file/67b2d2c2c15092936921c71a" \
 
 ---
 
-### 5. Download File
+### 5. Download File (Browser-Friendly)
 
 **GET** `/api/files/{id}/download`
 
-Download a file by its ID.
+Get a browser-friendly download URL for a file by its ID. Returns a SAS token URL that can be used directly in browsers for viewing PDFs, images, documents, etc.
 
-#### Example Request
+#### Query Parameters
+
+- `expiryHours` (optional): Token expiry time in hours (default: 1, max: 168)
+- `permissions` (optional): Access permissions - "r" (read), "w" (write), "d" (delete) (default: "r")
+
+#### Example Requests
 
 ```bash
+# Default (1 hour expiry, read-only)
 curl -X GET "https://localhost:7022/api/files/68b2df1c5326c8e7972330c7/download" \
+  -H "Authorization: Bearer {your-jwt-token}" \
+  -k
+
+# Custom expiry and permissions
+curl -X GET "https://localhost:7022/api/files/68b2df1c5326c8e7972330c7/download?expiryHours=2&permissions=rw" \
   -H "Authorization: Bearer {your-jwt-token}" \
   -k
 ```
@@ -271,8 +283,42 @@ curl -X GET "https://localhost:7022/api/files/68b2df1c5326c8e7972330c7/download"
 
 **Success (200 OK):**
 
+```json
+{
+  "sasUrl": "https://strhackathondev.blob.core.windows.net/68b2d2c2c15092936921c718/68b2df125326c8e7972330c5/c70ad717-376e-4276-b5cc-fa899a69fe4f.txt?sv=2025-07-05&se=2025-08-30T13%3A17%3A52Z&sr=b&sp=r&sig=...",
+  "expiresAt": "2025-08-30T13:17:52.854398Z"
+}
+```
+
+**Frontend Usage:**
+
+- ✅ **PDF Viewing**: Use `sasUrl` directly in `<iframe>` or `<embed>` tags
+- ✅ **Image Display**: Use `sasUrl` in `<img src="">` tags
+- ✅ **Document Download**: Use `sasUrl` as download link
+- ✅ **Browser Opening**: Open `sasUrl` in new tab/window
+
+---
+
+### 5a. Download File Direct (Traditional)
+
+**GET** `/api/files/{id}/download-direct`
+
+Traditional file download that streams file content directly through the API.
+
+#### Example Request
+
+```bash
+curl -X GET "https://localhost:7022/api/files/68b2df1c5326c8e7972330c7/download-direct" \
+  -H "Authorization: Bearer {your-jwt-token}" \
+  -k \
+  --output downloaded-file.txt
+```
+
+#### Response
+
+**Success (200 OK):**
+
 - Returns the file content as a binary stream
-- Example output: `This is a test file for upload testing`
 - Headers include:
   - `Content-Type`: Original file content type
   - `Content-Disposition`: attachment; filename="original-filename.ext"

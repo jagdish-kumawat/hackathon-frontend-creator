@@ -2,6 +2,8 @@
 const nextConfig = {
   experimental: {
     mdxRs: true,
+    // Enable larger response sizes
+    largePageDataBytes: 128 * 1000 * 1000, // 128MB
   },
   pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
 };
