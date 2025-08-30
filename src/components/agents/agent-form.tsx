@@ -14,13 +14,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useLlmProviders, useDomains } from "@/hooks/use-agents";
 import {
   CreateAgentRequest,
   UpdateAgentRequest,
   Agent,
 } from "@/types/agent-api";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { llmUtilityApiClient } from "@/lib/llm-utility-api";
+import { toast } from "sonner";
 
 interface AgentFormProps {
   onSubmit: (data: CreateAgentRequest | UpdateAgentRequest) => Promise<void>;
@@ -51,6 +59,8 @@ export function AgentForm({
 
   const [customDomain, setCustomDomain] = useState("");
   const [showCustomDomain, setShowCustomDomain] = useState(false);
+  const [isGeneratingInstructions, setIsGeneratingInstructions] =
+    useState(false);
 
   const {
     providers,
@@ -115,13 +125,67 @@ export function AgentForm({
       newErrors.deploymentModel =
         "Deployment Model must be 100 characters or less";
 
-    if (!formData.instructions.trim())
-      newErrors.instructions = "Instructions are required";
-    if (formData.instructions.length > 2000)
-      newErrors.instructions = "Instructions must be 2000 characters or less";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleGenerateInstructions = async () => {
+    if (
+      !formData.name.trim() ||
+      (!formData.domain.trim() && !customDomain.trim())
+    ) {
+      toast.error(
+        "Please fill in the agent name and domain before generating instructions"
+      );
+      return;
+    }
+
+    setIsGeneratingInstructions(true);
+    setFormData((prev) => ({ ...prev, instructions: "" }));
+
+    // Clear any previous errors
+    setErrors((prev) => ({ ...prev, instructions: "" }));
+
+    try {
+      const finalDomain = showCustomDomain ? customDomain : formData.domain;
+
+      toast.info("Generating AI-powered instructions...", {
+        description: `Creating instructions for ${formData.name} in ${finalDomain} domain`,
+        duration: 2000,
+      });
+
+      for await (const chunk of llmUtilityApiClient.generateInstructions({
+        agentName: formData.name,
+        domain: finalDomain,
+        description: formData.description || undefined,
+      })) {
+        setFormData((prev) => ({
+          ...prev,
+          instructions: prev.instructions + chunk,
+        }));
+      }
+
+      toast.success("Instructions generated successfully!", {
+        description: "You can now review and edit the generated instructions",
+      });
+    } catch (error) {
+      console.error("Failed to generate instructions:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to generate instructions";
+
+      toast.error("Failed to generate instructions", {
+        description: errorMessage,
+      });
+
+      setErrors((prev) => ({
+        ...prev,
+        instructions: errorMessage,
+      }));
+    } finally {
+      setIsGeneratingInstructions(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -342,7 +406,36 @@ export function AgentForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="instructions">Instructions *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="instructions">Instructions *</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGenerateInstructions}
+                      disabled={isGeneratingInstructions || isLoading}
+                      className="h-8 px-3 gap-1.5"
+                    >
+                      {isGeneratingInstructions ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 text-blue-500" />
+                      )}
+                      <span className="text-xs font-medium">AI Writer</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>
+                      Generate AI-powered instructions based on agent name and
+                      domain
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Textarea
               id="instructions"
               value={formData.instructions}
@@ -357,6 +450,7 @@ export function AgentForm({
               className={`min-h-[100px] ${
                 errors.instructions ? "border-destructive" : ""
               }`}
+              disabled={isGeneratingInstructions}
             />
             {errors.instructions && (
               <p className="text-sm text-destructive">{errors.instructions}</p>
