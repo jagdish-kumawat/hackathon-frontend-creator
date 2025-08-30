@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/components/providers/mock-auth-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -10,7 +10,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      router.push("/landing");
+      router.push("/");
     }
   }, [isAuthenticated, loading, router]);
 

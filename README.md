@@ -1,6 +1,34 @@
 # Voice Agent Creator Portal
 
-A comprehensive Next.js application for designing, configuring, and simulating modular voice agent pipelines. This is a pure frontend application with no backend dependencies, featuring a complete creator/management portal for voice agents with STT (Speech-to-Text) → LLM (Large Language Model) → TTS (Text-to-Speech) pipelines.
+A comprehensive Next.js application for designing, conf## 🔐 Authentication
+
+The application now uses **Microsoft Entra ID** for enterprise authentication:
+
+### Current Configuration (Production Mode)
+
+- ✅ Real Microsoft Entra ID integration configured
+- ✅ Your Azure App Registration active
+- ✅ Environment variables set in `.env.local`:
+  ```
+  NEXT_PUBLIC_AZURE_CLIENT_ID=ccb2bd42-3f55-4601-8a0a-5439c958ade6
+  NEXT_PUBLIC_AZURE_TENANT_ID=common
+  ```
+
+### Features
+
+- **Popup Login**: Secure Microsoft authentication popup
+- **Persistent Sessions**: User stays logged in across browser sessions
+- **Profile Display**: Shows authenticated user information in navigation
+- **Secure Logout**: Properly clears session and redirects to home page
+- **Protected Routes**: All dashboard features require authentication
+- **Enterprise Ready**: Full Entra ID compliance and security
+
+### How It Works
+
+1. **Landing Page**: Visit `/` to see the marketing page
+2. **Sign In**: Click "Sign in with Microsoft" to authenticate via popup
+3. **Dashboard**: Redirected to `/dashboard` after successful login
+4. **Navigation**: User profile shown in top navigation with logout optionlating modular voice agent pipelines. This is a pure frontend application with no backend dependencies, featuring a complete creator/management portal for voice agents with STT (Speech-to-Text) → LLM (Large Language Model) → TTS (Text-to-Speech) pipelines.
 
 ## 🚀 Features
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useAuth } from "@/components/providers/mock-auth-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import {
   Bot,
   Settings,

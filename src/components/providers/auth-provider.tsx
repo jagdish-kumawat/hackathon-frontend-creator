@@ -26,16 +26,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize MSAL
-    msalInstance.initialize().then(() => {
-      // Check if user is already signed in
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length > 0) {
-        setUser(accounts[0]);
-        setIsAuthenticated(true);
+    const initializeMsal = async () => {
+      try {
+        // Initialize MSAL
+        await msalInstance.initialize();
+
+        // Check if user is already signed in
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          setUser(accounts[0]);
+          setIsAuthenticated(true);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error("MSAL initialization error:", error);
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    initializeMsal();
 
     // Set up event callback
     const callbackId = msalInstance.addEventCallback((event: EventMessage) => {
@@ -65,11 +74,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await msalInstance.logoutPopup();
+      const logoutRequest = {
+        account: msalInstance.getActiveAccount(),
+        mainWindowRedirectUri: window.location.origin,
+      };
+      await msalInstance.logoutPopup(logoutRequest);
       setUser(null);
       setIsAuthenticated(false);
+      // Redirect to home page after logout
+      window.location.href = "/";
     } catch (error) {
       console.error("Logout failed:", error);
+      // Fallback - still clear local state and redirect
+      setUser(null);
+      setIsAuthenticated(false);
+      window.location.href = "/";
     }
   };
 
