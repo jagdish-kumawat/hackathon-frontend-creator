@@ -12,18 +12,18 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ className }: UserProfileProps) {
-  const { userProfile, refreshUserProfile } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: userProfile?.firstName || "",
-    lastName: userProfile?.lastName || "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
   });
 
   const handleEdit = () => {
     setFormData({
-      firstName: userProfile?.firstName || "",
-      lastName: userProfile?.lastName || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
     });
     setIsEditing(true);
   };
@@ -31,8 +31,8 @@ export function UserProfile({ className }: UserProfileProps) {
   const handleCancel = () => {
     setIsEditing(false);
     setFormData({
-      firstName: userProfile?.firstName || "",
-      lastName: userProfile?.lastName || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
     });
   };
 
@@ -60,7 +60,7 @@ export function UserProfile({ className }: UserProfileProps) {
     }
   };
 
-  if (!userProfile) {
+  if (!user) {
     return (
       <Card className={`p-6 ${className}`}>
         <div className="text-center text-gray-500">
@@ -99,7 +99,7 @@ export function UserProfile({ className }: UserProfileProps) {
               />
             ) : (
               <div className="px-3 py-2 bg-gray-50 rounded-md">
-                {userProfile.firstName}
+                {user.firstName}
               </div>
             )}
           </div>
@@ -120,9 +120,18 @@ export function UserProfile({ className }: UserProfileProps) {
               />
             ) : (
               <div className="px-3 py-2 bg-gray-50 rounded-md">
-                {userProfile.lastName}
+                {user.lastName}
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-600">
+              {user.username}
+            </div>
           </div>
 
           <div>
@@ -130,7 +139,7 @@ export function UserProfile({ className }: UserProfileProps) {
               Email
             </label>
             <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-600">
-              {userProfile.email}
+              {user.email}
             </div>
           </div>
 
@@ -139,35 +148,38 @@ export function UserProfile({ className }: UserProfileProps) {
               Full Name
             </label>
             <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-600">
-              {userProfile.fullName}
+              {user.fullName}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Roles
             </label>
             <div className="px-3 py-2 bg-gray-50 rounded-md">
-              <span
-                className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                  userProfile.isActive
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {userProfile.isActive ? "Active" : "Inactive"}
-              </span>
+              <div className="flex flex-wrap gap-1">
+                {user.roles.map((role) => (
+                  <span
+                    key={role}
+                    className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800"
+                  >
+                    {role}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Created At
-            </label>
-            <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-600">
-              {new Date(userProfile.createdAt).toLocaleDateString()}
+          {user.tenantId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tenant ID
+              </label>
+              <div className="px-3 py-2 bg-gray-50 rounded-md text-gray-600">
+                {user.tenantId}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {isEditing && (

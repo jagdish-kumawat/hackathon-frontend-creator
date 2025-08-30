@@ -11,8 +11,6 @@
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
-    "@azure/msal-browser": "^4.21.1",
-    "@azure/msal-react": "^3.0.19",
     "@hookform/resolvers": "^3.3.2",
     "@mdx-js/loader": "^3.0.0",
     "@mdx-js/react": "^3.0.0",

@@ -1,26 +1,49 @@
 export interface User {
   id: string;
+  username: string;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
-  aadObjectId: string;
-  tenantId: string;
-  isActive: boolean;
   fullName: string;
-  createdAt: string;
-  updatedAt: string;
-  isDeleted: boolean;
-  deletedAt: string | null;
+  roles: string[];
+  tenantId: string | null;
 }
 
-export interface CurrentUserInfo {
-  aadObjectId: string;
-  tenantId: string;
-  email: string;
+export interface AuthResponse {
+  token: string;
+  refreshToken: string;
+  expiresAt: string;
+  user: User;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+  tenantId?: string;
+}
+
+export interface RegisterRequest {
   firstName: string;
   lastName: string;
-  preferredUsername: string;
-  name: string;
+  email: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
+  tenantId?: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+export interface LogoutRequest {
+  refreshToken: string;
 }
 
 export interface UserStats {
@@ -35,22 +58,15 @@ export interface UpdateCurrentUserRequest {
   lastName: string;
 }
 
-export interface RegisterUserRequest {
-  aadObjectId: string;
-  tenantId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-}
-
 export interface UpdateUserStatusRequest {
   isActive: boolean;
 }
 
 export interface ApiError {
-  type: string;
-  title: string;
-  status: number;
-  detail: string;
-  instance: string;
+  message: string;
+  errors?: Record<string, string[]>;
+}
+
+export interface AvailabilityResponse {
+  isAvailable: boolean;
 }

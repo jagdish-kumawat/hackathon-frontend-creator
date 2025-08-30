@@ -1,8 +1,6 @@
-import { msalInstance, apiRequest } from "@/lib/auth";
+import { getAuthHeaders } from "@/lib/auth";
 import {
   User,
-  CurrentUserInfo,
-  RegisterUserRequest,
   UpdateCurrentUserRequest,
   UpdateUserStatusRequest,
   UserStats,
@@ -11,128 +9,71 @@ import { isDebugEnabled } from "@/lib/dev-utils";
 import { logger } from "@/lib/logger";
 
 const API_BASE_URL =
-  process.env.API_BASE_URL || "https://r5thg0j4-7022.inc1.devtunnels.ms";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://localhost:7022";
 
-// Helper function to get access token
-async function getAccessToken(): Promise<string> {
-  const accounts = msalInstance.getAllAccounts();
-  if (accounts.length === 0) {
-    throw new Error("No authenticated user found");
-  }
-
-  const account = accounts[0];
+// Helper function to make authenticated requests
+async function makeAuthenticatedRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers = getAuthHeaders();
 
   try {
-    // Try to get token silently first with API scope
-    const response = await msalInstance.acquireTokenSilent({
-      scopes: apiRequest.scopes,
-      account: account,
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers,
+      },
     });
-    return response.accessToken;
-  } catch (error) {
-    // If silent token acquisition fails, try interactive
-    const response = await msalInstance.acquireTokenPopup({
-      scopes: apiRequest.scopes,
-      account: account,
-    });
-    return response.accessToken;
-  }
-}
 
-// Helper function to create auth headers
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const token = await getAccessToken();
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-}
-
-// Helper function to handle API responses
-async function handleApiResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const errorText = await response.text();
-    let errorData;
-
-    try {
-      errorData = JSON.parse(errorText);
-    } catch {
-      errorData = {
-        status: response.status,
-        title: response.statusText,
-        detail: errorText,
-      };
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = {
+          message: `HTTP ${response.status}: ${response.statusText}`,
+        };
+      }
+      throw new Error(errorData.message || "Request failed");
     }
 
-    throw new Error(
-      errorData.detail ||
-        errorData.title ||
-        `HTTP ${response.status}: ${response.statusText}`
-    );
-  }
+    // Handle empty responses
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
 
-  // Handle 204 No Content
-  if (response.status === 204) {
-    return {} as T;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return text as unknown as T;
+    }
+  } catch (error) {
+    logger.error("API request failed:", error);
+    throw error;
   }
-
-  return response.json();
 }
 
 export const userApi = {
   /**
-   * Get current user profile
+   * Get current user profile - this now uses the auth API's /me endpoint
+   * The auth provider already handles this, but keeping for compatibility
    */
   async getCurrentUser(): Promise<User> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-      method: "GET",
-      headers,
-    });
-    return handleApiResponse<User>(response);
+    return makeAuthenticatedRequest<User>("/api/auth/me");
   },
 
   /**
    * Update current user profile
    */
   async updateCurrentUser(userData: UpdateCurrentUserRequest): Promise<User> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    return makeAuthenticatedRequest<User>("/api/users/me", {
       method: "PUT",
-      headers,
       body: JSON.stringify(userData),
     });
-    return handleApiResponse<User>(response);
-  },
-
-  /**
-   * Register current user (typically called on first login)
-   */
-  async registerUser(): Promise<User> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/register`, {
-      method: "POST",
-      headers,
-    });
-    return handleApiResponse<User>(response);
-  },
-
-  /**
-   * Get current user token information (for debugging - development only)
-   */
-  async getTokenInfo(): Promise<CurrentUserInfo> {
-    if (!isDebugEnabled()) {
-      throw new Error(
-        "Token info endpoint is only available in development mode"
-      );
-    }
-
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/me/token-info`, {
-      method: "GET",
-      headers,
-    });
-    return handleApiResponse<CurrentUserInfo>(response);
   },
 
   /**
@@ -140,12 +81,7 @@ export const userApi = {
    * Note: This requires proper admin permissions on the backend
    */
   async getUserById(id: string): Promise<User> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
-      method: "GET",
-      headers,
-    });
-    return handleApiResponse<User>(response);
+    return makeAuthenticatedRequest<User>(`/api/users/${id}`);
   },
 
   /**
@@ -156,13 +92,10 @@ export const userApi = {
     id: string,
     statusData: UpdateUserStatusRequest
   ): Promise<User> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}/status`, {
+    return makeAuthenticatedRequest<User>(`/api/users/${id}/status`, {
       method: "PUT",
-      headers,
       body: JSON.stringify(statusData),
     });
-    return handleApiResponse<User>(response);
   },
 
   /**
@@ -170,12 +103,9 @@ export const userApi = {
    * Note: This requires proper admin permissions on the backend
    */
   async deleteUser(id: string): Promise<void> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+    return makeAuthenticatedRequest<void>(`/api/users/${id}`, {
       method: "DELETE",
-      headers,
     });
-    return handleApiResponse<void>(response);
   },
 
   /**
@@ -183,43 +113,19 @@ export const userApi = {
    * Note: This requires proper admin permissions on the backend
    */
   async permanentDeleteUser(id: string): Promise<void> {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}/permanent`, {
+    return makeAuthenticatedRequest<void>(`/api/users/${id}/permanent`, {
       method: "DELETE",
-      headers,
     });
-    return handleApiResponse<void>(response);
   },
 
   /**
    * Get user statistics
    */
   async getUserStats(tenantId?: string): Promise<UserStats> {
-    const headers = await getAuthHeaders();
     const url = tenantId
-      ? `${API_BASE_URL}/api/users/stats?tenantId=${encodeURIComponent(
-          tenantId
-        )}`
-      : `${API_BASE_URL}/api/users/stats`;
+      ? `/api/users/stats?tenantId=${encodeURIComponent(tenantId)}`
+      : `/api/users/stats`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers,
-    });
-    return handleApiResponse<UserStats>(response);
-  },
-
-  /**
-   * Check if current user exists, if not register them
-   */
-  async ensureUserExists(): Promise<User> {
-    try {
-      // Try to get current user first
-      return await this.getCurrentUser();
-    } catch (error) {
-      // If user doesn't exist (404 or similar), register them
-      logger.info("User not found, registering new user...");
-      return await this.registerUser();
-    }
+    return makeAuthenticatedRequest<UserStats>(url);
   },
 };

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/components/providers/auth-provider";
+import { AuthModal } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,51 +34,34 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-  const [isLoginLoading, setIsLoginLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalView, setAuthModalView] = useState<"login" | "register">(
+    "login"
+  );
+  const { isAuthenticated } = useAuth();
   const { theme, setTheme, systemTheme } = useTheme();
 
   // Ensure theme is mounted before rendering to avoid hydration issues
   useEffect(() => {
     setMounted(true);
-    console.log(
-      "Component mounted, theme:",
-      theme,
-      "systemTheme:",
-      systemTheme
-    );
-  }, [theme, systemTheme]);
+  }, []);
 
   const toggleTheme = () => {
-    if (!mounted) {
-      console.log("Not mounted yet, ignoring toggle");
-      return;
-    }
-
+    if (!mounted) return;
     const currentTheme = theme === "system" ? systemTheme : theme;
     const newTheme = currentTheme === "dark" ? "light" : "dark";
-
-    console.log("Toggling theme:", {
-      current: currentTheme,
-      new: newTheme,
-      theme,
-      systemTheme,
-    });
     setTheme(newTheme);
   };
 
-  const handleLogin = async () => {
-    setIsLoginLoading(true);
-    try {
-      await login();
-      // Redirect will be handled by auth guard
-      window.location.href = "/dashboard";
-    } catch (error) {
-      console.error("Login failed:", error);
-    } finally {
-      setIsLoginLoading(false);
-    }
+  const openLoginModal = () => {
+    setAuthModalView("login");
+    setAuthModalOpen(true);
+  };
+
+  const openRegisterModal = () => {
+    setAuthModalView("register");
+    setAuthModalOpen(true);
   };
 
   // If already authenticated, redirect to dashboard
@@ -88,14 +72,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-blue-950">
-      {/* Debug info - remove in production */}
-      {mounted && (
-        <div className="fixed top-4 right-4 z-50 bg-black/10 dark:bg-white/10 text-xs p-2 rounded">
-          Theme: {theme} | System: {systemTheme} | Resolved:{" "}
-          {theme === "system" ? systemTheme : theme}
-        </div>
-      )}
-
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -125,7 +101,6 @@ export default function HomePage() {
               onClick={toggleTheme}
               disabled={!mounted}
               className="relative"
-              title={`Current theme: ${theme}, System: ${systemTheme}`}
             >
               {mounted ? (
                 <>
@@ -135,29 +110,16 @@ export default function HomePage() {
               ) : (
                 <div className="h-4 w-4 animate-pulse bg-gray-300 rounded" />
               )}
-              <span className="sr-only">Toggle theme (Current: {theme})</span>
+              <span className="sr-only">Toggle theme</span>
             </Button>
 
             <Button
-              onClick={handleLogin}
-              disabled={isLoginLoading}
+              onClick={openLoginModal}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
-              {isLoginLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  <span className="hidden sm:inline">Signing in...</span>
-                  <span className="sm:hidden">...</span>
-                </>
-              ) : (
-                <>
-                  <span className="hidden sm:inline">
-                    Sign in with Microsoft
-                  </span>
-                  <span className="sm:hidden">Sign in</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
+              <span className="hidden sm:inline">Sign In</span>
+              <span className="sm:hidden">Sign in</span>
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
         </div>
@@ -170,7 +132,7 @@ export default function HomePage() {
             variant="secondary"
             className="mb-6 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
           >
-            🚀 Now with Microsoft Entra ID Integration
+            🚀 Advanced Voice AI Platform
           </Badge>
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
             Build Voice Agents
@@ -185,21 +147,11 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button
               size="lg"
-              onClick={handleLogin}
-              disabled={isLoginLoading}
+              onClick={openRegisterModal}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-6"
             >
-              {isLoginLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Getting Started...
-                </>
-              ) : (
-                <>
-                  Get Started Free
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
-              )}
+              Get Started Free
+              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8 py-6">
               <Play className="w-5 h-5 mr-2" />
@@ -341,8 +293,8 @@ export default function HomePage() {
                 <Shield className="w-10 h-10 text-red-600 mb-4" />
                 <CardTitle>Enterprise Security</CardTitle>
                 <CardDescription>
-                  Microsoft Entra ID integration with enterprise-grade security
-                  and compliance
+                  JWT-based authentication with enterprise-grade security and
+                  compliance
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -362,21 +314,11 @@ export default function HomePage() {
           </p>
           <Button
             size="lg"
-            onClick={handleLogin}
-            disabled={isLoginLoading}
+            onClick={openRegisterModal}
             className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-6 font-semibold"
           >
-            {isLoginLoading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
-                Signing in with Microsoft...
-              </>
-            ) : (
-              <>
-                Start Building Now
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
-            )}
+            Start Building Now
+            <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
       </section>
@@ -478,6 +420,13 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultView={authModalView}
+      />
     </div>
   );
 }

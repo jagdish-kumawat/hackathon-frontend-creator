@@ -7,23 +7,24 @@ import {
   useState,
   useCallback,
 } from "react";
+import { authClient, TokenManager, isAuthenticated } from "@/lib/auth";
 import {
-  PublicClientApplication,
-  EventType,
-  EventMessage,
-  AuthenticationResult,
-  AccountInfo,
-} from "@azure/msal-browser";
-import { msalInstance, loginRequest } from "@/lib/auth";
-import { userApi } from "@/lib/user-api";
-import { User } from "@/types/user";
+  User,
+  LoginRequest,
+  RegisterRequest,
+  ChangePasswordRequest,
+} from "@/types/user";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: AccountInfo | null;
-  userProfile: User | null;
-  login: () => Promise<void>;
+  user: User | null;
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (userData: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
+  changePassword: (request: ChangePasswordRequest) => Promise<void>;
+  checkUsernameAvailability: (username: string) => Promise<boolean>;
+  checkEmailAvailability: (email: string) => Promise<boolean>;
   loading: boolean;
   refreshUserProfile: () => Promise<void>;
 }
@@ -31,110 +32,122 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<AccountInfo | null>(null);
-  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [isAuth, setIsAuth] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refreshUserProfile = useCallback(async () => {
-    if (!isAuthenticated) {
-      setUserProfile(null);
+    if (!isAuthenticated()) {
+      setUser(null);
       return;
     }
 
     try {
-      const profile = await userApi.ensureUserExists();
-      setUserProfile(profile);
+      const profile = await authClient.getCurrentUser();
+      setUser(profile);
     } catch (error) {
       console.error("Failed to load user profile:", error);
-      setUserProfile(null);
+      setUser(null);
+      TokenManager.clearTokens();
+      setIsAuth(false);
     }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    const initializeMsal = async () => {
-      try {
-        // Initialize MSAL
-        await msalInstance.initialize();
-
-        // Check if user is already signed in
-        const accounts = msalInstance.getAllAccounts();
-        if (accounts.length > 0) {
-          setUser(accounts[0]);
-          setIsAuthenticated(true);
-        }
-        setLoading(false);
-      } catch (error) {
-        console.error("MSAL initialization error:", error);
-        setLoading(false);
-      }
-    };
-
-    initializeMsal();
-
-    // Set up event callback
-    const callbackId = msalInstance.addEventCallback((event: EventMessage) => {
-      if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
-        const payload = event.payload as AuthenticationResult;
-        setUser(payload.account);
-        setIsAuthenticated(true);
-      }
-    });
-
-    return () => {
-      if (callbackId) {
-        msalInstance.removeEventCallback(callbackId);
-      }
-    };
   }, []);
 
-  // Load user profile when authentication state changes
   useEffect(() => {
-    if (isAuthenticated && user) {
-      refreshUserProfile();
-    } else {
-      setUserProfile(null);
-    }
-  }, [isAuthenticated, user, refreshUserProfile]);
+    const initializeAuth = async () => {
+      try {
+        if (isAuthenticated()) {
+          setIsAuth(true);
+          await refreshUserProfile();
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        TokenManager.clearTokens();
+        setIsAuth(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const login = async () => {
+    initializeAuth();
+  }, [refreshUserProfile]);
+
+  const login = async (credentials: LoginRequest) => {
     try {
-      const response = await msalInstance.loginPopup(loginRequest);
-      setUser(response.account);
-      setIsAuthenticated(true);
+      const authResponse = await authClient.login(credentials);
+      setUser(authResponse.user);
+      setIsAuth(true);
     } catch (error) {
       console.error("Login failed:", error);
+      throw error;
+    }
+  };
+
+  const register = async (userData: RegisterRequest) => {
+    try {
+      const authResponse = await authClient.register(userData);
+      setUser(authResponse.user);
+      setIsAuth(true);
+    } catch (error) {
+      console.error("Registration failed:", error);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-      const logoutRequest = {
-        account: msalInstance.getActiveAccount(),
-        mainWindowRedirectUri: window.location.origin,
-      };
-      await msalInstance.logoutPopup(logoutRequest);
-      setUser(null);
-      setUserProfile(null);
-      setIsAuthenticated(false);
-      // Redirect to home page after logout
-      window.location.href = "/";
+      const refreshToken = TokenManager.getRefreshToken();
+      if (refreshToken) {
+        await authClient.logout({ refreshToken });
+      }
     } catch (error) {
-      console.error("Logout failed:", error);
-      // Fallback - still clear local state and redirect
+      console.error("Logout request failed:", error);
+    } finally {
+      TokenManager.clearTokens();
       setUser(null);
-      setUserProfile(null);
-      setIsAuthenticated(false);
-      window.location.href = "/";
+      setIsAuth(false);
     }
   };
 
+  const logoutAll = async () => {
+    try {
+      await authClient.logoutAll();
+    } catch (error) {
+      console.error("Logout all request failed:", error);
+    } finally {
+      TokenManager.clearTokens();
+      setUser(null);
+      setIsAuth(false);
+    }
+  };
+
+  const changePassword = async (request: ChangePasswordRequest) => {
+    await authClient.changePassword(request);
+  };
+
+  const checkUsernameAvailability = async (
+    username: string
+  ): Promise<boolean> => {
+    const response = await authClient.checkUsernameAvailability(username);
+    return response.isAvailable;
+  };
+
+  const checkEmailAvailability = async (email: string): Promise<boolean> => {
+    const response = await authClient.checkEmailAvailability(email);
+    return response.isAvailable;
+  };
+
   const value = {
-    isAuthenticated,
+    isAuthenticated: isAuth,
     user,
-    userProfile,
     login,
+    register,
     logout,
+    logoutAll,
+    changePassword,
+    checkUsernameAvailability,
+    checkEmailAvailability,
     loading,
     refreshUserProfile,
   };

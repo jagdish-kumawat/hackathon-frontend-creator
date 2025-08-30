@@ -5,7 +5,6 @@ import {
   UpdateCurrentUserRequest,
   UpdateUserStatusRequest,
   UserStats,
-  CurrentUserInfo,
 } from "@/types/user";
 
 export function useUserManagement() {
@@ -51,28 +50,6 @@ export function useUserManagement() {
     },
     [handleApiCall]
   );
-
-  const registerUser = useCallback(async (): Promise<User | null> => {
-    return handleApiCall(
-      () => userApi.registerUser(),
-      "Failed to register user"
-    );
-  }, [handleApiCall]);
-
-  const ensureUserExists = useCallback(async (): Promise<User | null> => {
-    return handleApiCall(
-      () => userApi.ensureUserExists(),
-      "Failed to ensure user exists"
-    );
-  }, [handleApiCall]);
-
-  const getTokenInfo =
-    useCallback(async (): Promise<CurrentUserInfo | null> => {
-      return handleApiCall(
-        () => userApi.getTokenInfo(),
-        "Failed to get token information"
-      );
-    }, [handleApiCall]);
 
   const getUserById = useCallback(
     async (id: string): Promise<User | null> => {
@@ -139,9 +116,6 @@ export function useUserManagement() {
     clearError,
     getCurrentUser,
     updateCurrentUser,
-    registerUser,
-    ensureUserExists,
-    getTokenInfo,
     getUserById,
     updateUserStatus,
     deleteUser,
